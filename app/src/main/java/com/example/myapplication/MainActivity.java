@@ -7,15 +7,20 @@ import androidx.room.Room;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 
 import com.example.myapplication.appRoomDB.AppDatabase;
 import com.example.myapplication.appRoomDB.VirtualObject;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -24,7 +29,11 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     public Button bt;
-    public TextView tv;
+    public TextView nomeMostro;
+    public TextView livelloMostro;
+    public TextView latitudineMostro;
+    public TextView longitudineMostro;
+    public ImageView immagineMostro;
     public static final String TAG = "MiaApp";
 
     public AppDatabase db;
@@ -47,7 +56,11 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("MiaApp", "onCreate: "+ highScore); */
 
-        tv = findViewById(R.id.textView);
+        nomeMostro = findViewById(R.id.NomeMostro);
+        livelloMostro = findViewById(R.id.livelloMostro);
+        latitudineMostro = findViewById(R.id.latMostro);
+        longitudineMostro = findViewById(R.id.lonMostro);
+        immagineMostro = findViewById(R.id.imageView);
         bt = findViewById(R.id.button);
 
         if (sharedPref.getString("sid","").isEmpty() ||
@@ -95,7 +108,12 @@ public class MainActivity extends AppCompatActivity {
             lf.addListener(() -> {
                 try {
                     VirtualObject vo = lf.get();
-                    Log.d(TAG, "onCreate: " + vo.name);
+                    Log.d(TAG, "onCreate: " + vo.name + " " + vo.image);
+                    nomeMostro.setText(vo.name);
+                    livelloMostro.setText(String.valueOf(vo.level));
+                    latitudineMostro.setText(String.valueOf(vo.lat));
+                    longitudineMostro.setText(String.valueOf(vo.lon));
+                    getBytesFromImageBase64(vo.image);
                 } catch (Exception e) {
                     Log.d(TAG, "onCreate error: " + e.getMessage());
                     callVirtualObjectDetails();
@@ -135,5 +153,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    public void getBytesFromImageBase64(String imageBase64) {
+
+        byte[] imageBytes = android.util.Base64.decode(imageBase64, android.util.Base64.DEFAULT);
+        Bitmap decodedImage = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+
+        immagineMostro.setImageBitmap(decodedImage);
+    }
+
 
 }
