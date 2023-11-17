@@ -12,6 +12,6 @@ public interface ApiInterface {
 
 
     @GET("objects/{id}/")
-    Call<VirtualObjectDetailsResponse> virtualObjectDetails(@Path("id")int id, @Query("sid") String sid);
+    Call<VirtualObjectDetails> virtualObjectDetails(@Path("id")int id, @Query("sid") String sid);
 
 }

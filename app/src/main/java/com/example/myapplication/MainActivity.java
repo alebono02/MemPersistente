@@ -16,11 +16,7 @@ import android.widget.TextView;
 
 
 import com.example.myapplication.appRoomDB.AppDatabase;
-import com.example.myapplication.appRoomDB.VirtualObject;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import java.io.IOException;
-import java.io.OutputStream;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     public TextView latitudineMostro;
     public TextView longitudineMostro;
     public ImageView immagineMostro;
+
+    public SharedPreferences sharedPref;
     public static final String TAG = "MiaApp";
 
     public AppDatabase db;
@@ -43,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        sharedPref = getPreferences(Context.MODE_PRIVATE);
 
         db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database-name").build();
@@ -104,16 +102,12 @@ public class MainActivity extends AppCompatActivity {
 
 
         bt.setOnClickListener(v -> {
-            ListenableFuture<VirtualObject> lf = db.virtualObjectDao().findById(24);
+            ListenableFuture<VirtualObjectDetails> lf = db.virtualObjectDao().findById(24);
             lf.addListener(() -> {
                 try {
-                    VirtualObject vo = lf.get();
+                    VirtualObjectDetails vo = lf.get();
                     Log.d(TAG, "onCreate: " + vo.name + " " + vo.image);
-                    nomeMostro.setText(vo.name);
-                    livelloMostro.setText(String.valueOf(vo.level));
-                    latitudineMostro.setText(String.valueOf(vo.lat));
-                    longitudineMostro.setText(String.valueOf(vo.lon));
-                    getBytesFromImageBase64(vo.image);
+                    setMonsterView(vo);
                 } catch (Exception e) {
                     Log.d(TAG, "onCreate error: " + e.getMessage());
                     callVirtualObjectDetails();
@@ -125,18 +119,18 @@ public class MainActivity extends AppCompatActivity {
 
     public void callVirtualObjectDetails() {
         ApiInterface apiInterface = getApiInterface();
-        Call<VirtualObjectDetailsResponse> virtualObjectDetailsCall = apiInterface.virtualObjectDetails(24,"PULvqIxV1TQ1jRtJ6dy8");
-        virtualObjectDetailsCall.enqueue(new Callback<VirtualObjectDetailsResponse>() {
+        Call<VirtualObjectDetails> virtualObjectDetailsCall = apiInterface.virtualObjectDetails(24,sharedPref.getString("sid", ""));
+        virtualObjectDetailsCall.enqueue(new Callback<VirtualObjectDetails>() {
             @Override
-            public void onResponse(Call<VirtualObjectDetailsResponse> call, Response<VirtualObjectDetailsResponse> response) {
+            public void onResponse(Call<VirtualObjectDetails> call, Response<VirtualObjectDetails> response) {
                 if (!response.isSuccessful()) {
                     Log.d("MiaApp", "Error: " + response.code());
                     return;
                 }
-                VirtualObjectDetailsResponse result = response.body();
+                VirtualObjectDetails result = response.body();
                 Log.d("MiaApp", "mostro: " + result.name);
 
-                ListenableFuture<Void> virtualObjectListenableFuture = db.virtualObjectDao().insertAll(new VirtualObject(result.id, result.type, result.level, result.lat, result.lon, result.image, result.name));
+                ListenableFuture<Void> virtualObjectListenableFuture = db.virtualObjectDao().insertAll(result);
                 virtualObjectListenableFuture.addListener(() -> {
                     try {
                         virtualObjectListenableFuture.get();
@@ -145,13 +139,20 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "onResponse: " + e.getMessage());
                     }
                 }, getMainExecutor());
+
+                setMonsterView(result);
             }
 
             @Override
-            public void onFailure(Call<VirtualObjectDetailsResponse> call, Throwable t) {
+            public void onFailure(Call<VirtualObjectDetails> call, Throwable t) {
                 Log.d("MiaApp", "Error: " + t.getMessage());
             }
         });
+    }
+
+    private Bitmap base64ToBitmap(String b64) {
+        byte[] imageBytes = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+        return android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
 
     public void getBytesFromImageBase64(String imageBase64) {
@@ -162,5 +163,11 @@ public class MainActivity extends AppCompatActivity {
         immagineMostro.setImageBitmap(decodedImage);
     }
 
-
+    public void setMonsterView(VirtualObjectDetails monster) {
+        nomeMostro.setText(monster.name);
+        livelloMostro.setText(String.valueOf(monster.level));
+        latitudineMostro.setText(String.valueOf(monster.lat));
+        longitudineMostro.setText(String.valueOf(monster.lon));
+        getBytesFromImageBase64(monster.image);
+    }
 }

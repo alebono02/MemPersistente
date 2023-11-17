@@ -1,11 +1,11 @@
-package com.example.myapplication.appRoomDB;
+package com.example.myapplication;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity
-public class VirtualObject {
+public class VirtualObjectDetails {
     @PrimaryKey
     public int id;
 
@@ -27,7 +27,7 @@ public class VirtualObject {
     @ColumnInfo(name = "name")
     public String name;
 
-    public VirtualObject(int id, String type, int level, double lat, double lon, String image, String name) {
+    public VirtualObjectDetails(int id, String type, int level, double lat, double lon, String image, String name) {
         this.id = id;
         this.type = type;
         this.level = level;
@@ -36,4 +36,6 @@ public class VirtualObject {
         this.image = image;
         this.name = name;
     }
+
+
 }
