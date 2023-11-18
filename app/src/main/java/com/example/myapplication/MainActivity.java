@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 VirtualObjectDetails result = response.body();
                 Log.d("MiaApp", "mostro: " + result.name);
-
+/*
                 ListenableFuture<Void> virtualObjectListenableFuture = db.virtualObjectDao().insertAll(result);
                 virtualObjectListenableFuture.addListener(() -> {
                     try {
@@ -139,7 +139,8 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "onResponse: " + e.getMessage());
                     }
                 }, getMainExecutor());
-
+*/
+                insertMonsterInDB(result);
                 setMonsterView(result);
             }
 
@@ -163,11 +164,23 @@ public class MainActivity extends AppCompatActivity {
         immagineMostro.setImageBitmap(decodedImage);
     }
 
+    public void insertMonsterInDB(VirtualObjectDetails monster) {
+        ListenableFuture<Void> virtualObjectListenableFuture = db.virtualObjectDao().insertAll(monster);
+        virtualObjectListenableFuture.addListener(() -> {
+            try {
+                virtualObjectListenableFuture.get();
+                Log.d(TAG, "onResponse: " + monster.name);
+            } catch (Exception e) {
+                Log.d(TAG, "onResponse: " + e.getMessage());
+            }
+        }, getMainExecutor());
+    }
+
     public void setMonsterView(VirtualObjectDetails monster) {
         nomeMostro.setText(monster.name);
         livelloMostro.setText(String.valueOf(monster.level));
         latitudineMostro.setText(String.valueOf(monster.lat));
         longitudineMostro.setText(String.valueOf(monster.lon));
-        getBytesFromImageBase64(monster.image);
+        immagineMostro.setImageBitmap(base64ToBitmap(monster.image));
     }
 }
