@@ -102,19 +102,23 @@ public class MainActivity extends AppCompatActivity {
 
 
         bt.setOnClickListener(v -> {
-            ListenableFuture<VirtualObjectDetails> lf = db.virtualObjectDao().findById(24);
-            lf.addListener(() -> {
-                try {
-                    VirtualObjectDetails vo = lf.get();
-                    Log.d(TAG, "onCreate: " + vo.name + " " + vo.image);
-                    setMonsterView(vo);
-                } catch (Exception e) {
-                    Log.d(TAG, "onCreate error: " + e.getMessage());
-                    callVirtualObjectDetails();
-                }
-            }, getMainExecutor());
+            getAndSetViewMonsterFromDB(24);
         });
 
+    }
+
+    public void getAndSetViewMonsterFromDB(int id) {
+        ListenableFuture<VirtualObjectDetails> lf = db.virtualObjectDao().findById(id);
+        lf.addListener(() -> {
+            try {
+                VirtualObjectDetails vo = lf.get();
+                Log.d(TAG, "onCreate: " + vo.name + " " + vo.image);
+                setMonsterView(vo);
+            } catch (Exception e) {
+                Log.d(TAG, "onCreate error: " + e.getMessage());
+                callVirtualObjectDetails();
+            }
+        }, getMainExecutor());
     }
 
     public void callVirtualObjectDetails() {
